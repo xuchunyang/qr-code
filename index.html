@@ -41,7 +41,8 @@
         border-top: 1px solid #333;
       }
 
-      input[type="text"] {
+      input[type="text"],
+      input[type="url"] {
         width: 100%;
         padding: 5px 10px;
         line-height: 1.5;
@@ -52,8 +53,11 @@
     <section class="read">
       <h1>Read QR Code</h1>
       <form>
-        <label for="file-to-read">Select an image:</label>
-        <input id="file-to-read" type="file" accept="image/*" required>
+        <label for="file-to-read">Select an image file:</label>
+        <input id="file-to-read" type="file" accept="image/*">
+        <label for="url-to-read"><em>Or</em> enter an image URL:</label>
+        <!-- e.g., https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg -->
+        <input id="url-to-read" type="url">
         <button>Read</button>
       </form>
       <p class="result"></p>
@@ -63,23 +67,41 @@
       <h1>Write QR Code</h1>
       <form>
         <label for="text">Enter text that you want to encode:</label>
-        <input id="text" type="text" required>
+        <input id="text" type="text" required placeholder="e.g., hello world">
         <button>Create image</button>
       </form>
       <p class="result"></p>
-    </section>    
+    </section>
 
     <script>
       const readForm = document.querySelector(".read form");
       const readResult = document.querySelector(".read .result");
       readForm.onsubmit = async (e) => {
         e.preventDefault();
-        const file = document.querySelector("#file-to-read").files[0];
-        readResult.textContent = `Sending ${file.name} to server for reading...`;
+
+        let data = null;
+        const files = document.querySelector("#file-to-read").files;
+        const url = document.querySelector("#url-to-read").value;
+        if (files.length) {
+          data = files[0];
+        } else {
+          if (!url) {
+            readResult.textContent = `You must select an image file OR URL`;
+            return;
+          }
+          const response = await fetch(url);
+          data = await response.blob();
+        }
+
+        if (data instanceof File) {
+          readResult.textContent = `Sending ${data.name} to server for reading...`;
+        } else {
+          readResult.textContent = `Sending ${url} to server for reading...`;
+        }
         try {
           const response = await fetch("/api/decode", {
             method: "POST",
-            body: file
+            body: data
           });
           const json = await response.json();
           if ("error" in json) {
@@ -96,7 +118,7 @@
       const writeResult = document.querySelector(".write .result");
       writeForm.onsubmit = async (e) => {
         e.preventDefault();
-        const text = document.querySelector("#text").value;        
+        const text = document.querySelector("#text").value;
         writeResult.textContent = `Encoding ${text}...`;
         try {
           const response = await fetch("/api/encode?" +
