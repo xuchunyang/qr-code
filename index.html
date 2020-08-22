@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Read and Write QR Code</title>
+    <style>
+      body {
+        max-width: 900px;
+        margin: 0 auto;
+        font-family: system-ui, sans-serif;
+      }
+
+      section {
+        margin: 0 1em;
+      }
+
+      input,
+      button {
+        font-family: inherit;
+        line-height: inherit;
+        font-size: 100%;
+      }
+
+      button {
+        padding: 5px 10px;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      input {
+        margin: 1em 0;
+      }
+
+      .write {
+        margin-top: 30px;
+        border-top: 1px solid #333;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 5px 10px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="read">
+      <h1>Read QR Code</h1>
+      <form>
+        <label for="file-to-read">Select an image:</label>
+        <input id="file-to-read" type="file" accept="image/*" required>
+        <button>Read</button>
+      </form>
+      <p class="result"></p>
+    </section>
+
+    <section class="write">
+      <h1>Write QR Code</h1>
+      <form>
+        <label for="text">Enter text that you want to encode:</label>
+        <input id="text" type="text" required>
+        <button>Create image</button>
+      </form>
+      <p class="result"></p>
+    </section>    
+
+    <script>
+      const readForm = document.querySelector(".read form");
+      const readResult = document.querySelector(".read .result");
+      readForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const file = document.querySelector("#file-to-read").files[0];
+        readResult.textContent = `Sending ${file.name} to server for reading...`;
+        try {
+          const response = await fetch("/api/decode", {
+            method: "POST",
+            body: file
+          });
+          const json = await response.json();
+          if ("error" in json) {
+            readResult.textContent = `Error: ${json.error}`;
+            return;
+          }
+          readResult.textContent = `Data: ${json.data}`;
+        } catch(e) {
+          readResult.textContent = `Error: ${e.message}`;
+        }
+      }
+
+      const writeForm = document.querySelector(".write form");
+      const writeResult = document.querySelector(".write .result");
+      writeForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const text = document.querySelector("#text").value;        
+        writeResult.textContent = `Encoding ${text}...`;
+        try {
+          const response = await fetch("/api/encode?" +
+                                       new URLSearchParams({text}));
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const img = document.createElement("img");
+          img.src = url;
+          writeResult.textContent = "";
+          writeResult.appendChild(img);
+        } catch (e) {
+          writeResult.textContent = `Error: ${e.message}`;
+        }
+      }
+    </script>
+  </body>
+</html>
