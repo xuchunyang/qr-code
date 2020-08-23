@@ -69,8 +69,6 @@ function decodeHandler(r, s) {
   }
 
   s.setHeader("Access-Control-Allow-Origin", "*");
-  // XXX Useless? POST can't use cache?
-  s.setHeader("Cache-Control", "s-maxage=31536000");
 
   if (r.method !== "POST") {
     s.statusCode = 400;
