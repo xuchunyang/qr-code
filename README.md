@@ -64,15 +64,15 @@ It uses these Node.js packages:
 - jsqr to decode qr code
 - qrcode to encode qr code
 
-The front end is plain HTML/CSS/JavaScript. The backend use builtin Node.js
-library besides the above three packages.
+The front end is plain HTML/CSS/JavaScript. The backend uses builtin Node.js
+library, besides the above three packages.
 
 ## How to run it locally?
 
 Vercel is required
 
 ```
-vercel dev
+$ vercel dev
 ```
 
 ## Privacy
