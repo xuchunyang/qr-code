@@ -56,6 +56,17 @@ strict-transport-security: max-age=63072000; includeSubDomains; preload
 }
 ```
 
+Or if the image is online, you can send a GET request with `imgsrc` query
+parameter, for example, you want to decode QR code in
+https://upload.wikimedia.org/wikipedia/commons/a/a7/Z80-Tianjin_-Beijing.jpg
+
+```
+~ $ curl 'https://qr-code-rw.vercel.app/api/decode?imgurl=https://upload.wikimedia.org/wikipedia/commons/a/a7/Z80-Tianjin_-Beijing.jpg'
+{
+  "data": "360848320672724996367623994228900041735739942854066845825761815943200000000000000000000053897628805389762880538976288053897628805389762880437000"
+}
+```
+
 ## How it work?
 
 It uses these Node.js packages:
