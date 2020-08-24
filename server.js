@@ -90,6 +90,7 @@ function decodeHandler(r, s) {
       const chunks = [];
       response.on("data", chunk => chunks.push(chunk));
       response.on("end", () => {
+        s.setHeader("Cache-Control", "s-maxage=31536000");
         decodeAndResponse(Buffer.concat(chunks));
       });
     }).on("error", e => {
