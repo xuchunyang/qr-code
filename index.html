@@ -79,30 +79,25 @@
       readForm.onsubmit = async (e) => {
         e.preventDefault();
 
-        let data = null;
-        const files = document.querySelector("#file-to-read").files;
+        const file = document.querySelector("#file-to-read").files[0];
         const url = document.querySelector("#url-to-read").value;
-        if (files.length) {
-          data = files[0];
-        } else {
-          if (!url) {
-            readResult.textContent = `You must select an image file OR URL`;
-            return;
-          }
-          const response = await fetch(url);
-          data = await response.blob();
+        if (!(file || url)) {
+          readResult.textContent = `You must select an image file OR URL`;
+          return;
         }
 
-        if (data instanceof File) {
-          readResult.textContent = `Sending ${data.name} to server for reading...`;
-        } else {
-          readResult.textContent = `Sending ${url} to server for reading...`;
-        }
         try {
-          const response = await fetch("/api/decode", {
-            method: "POST",
-            body: data
-          });
+          let response;
+          if (file) {
+            readResult.textContent = `Sending ${file.name} to server for reading...`;
+            response = await fetch("/api/decode", {
+              method: "POST",
+              body: file
+            });
+          } else {
+            readResult.textContent = `Sending ${url} to server for reading...`;
+            response = await fetch(`/api/decode?imgurl=${url}`);
+          }
           const json = await response.json();
           if ("error" in json) {
             readResult.textContent = `Error: ${json.error}`;

@@ -70,6 +70,36 @@ function decodeHandler(r, s) {
 
   s.setHeader("Access-Control-Allow-Origin", "*");
 
+  if (r.method === "GET") {
+    const myURL = new URL(r.url, "http://this-does-not-matter");
+    const imgURL = myURL.searchParams.get("imgurl");
+    if (!imgURL) {
+      s.statusCode = 400;
+      s.setHeader("Content-Type", "application/json");
+      s.end(json({error: "Missing imgurl query parameter"}));
+      return;
+    }
+
+    const http = require(imgURL.startsWith("https") ? "https" : "http");
+    console.log(`Fetch ${imgURL} ...`)
+    http.get(imgURL, response => {
+      if (!(response.statusCode >= 200 && response.statusCode <= 299)) {
+        xxx;
+        return;
+      }
+      const chunks = [];
+      response.on("data", chunk => chunks.push(chunk));
+      response.on("end", () => {
+        decodeAndResponse(Buffer.concat(chunks));
+      });
+    }).on("error", e => {
+      s.statusCode = 400;
+      s.setHeader("Content-Type", "application/json");
+      s.end(json({error: e.message}));
+    });
+    return;
+  }
+
   if (r.method !== "POST") {
     s.statusCode = 400;
     s.setHeader("Content-Type", "application/json");
@@ -79,13 +109,17 @@ function decodeHandler(r, s) {
 
   let chunks = [];
   r.on("data", chunk => chunks.push(chunk));
-  r.on("end", async () => {
-    const buffer = Buffer.concat(chunks);
+  r.on("end", () => {
+    decodeAndResponse(Buffer.concat(chunks));
+  });
+
+  // buffer is the image data
+  async function decodeAndResponse(buffer) {
     if (buffer.length === 0) {
       s.statusCode = 400;
       s.setHeader("Content-Type", "application/json");
       s.end(json({error: "Missing POST body, expect image data"}));
-      return;      
+      return;
     }
     try {
       const code = await decode(buffer);
@@ -106,7 +140,7 @@ function decodeHandler(r, s) {
       s.end(json({error: `Decode error: ${e.message}`}));
       return;
     }
-  })
+  }
 }
 
 // require("http").createServer(decodeHandler).listen(3000);
