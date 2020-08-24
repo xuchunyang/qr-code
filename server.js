@@ -82,9 +82,19 @@ function decodeHandler(r, s) {
 
     const http = require(imgURL.startsWith("https") ? "https" : "http");
     console.log(`Fetch ${imgURL} ...`)
-    http.get(imgURL, response => {
+    // http.get does not set a default user-agent header, while some websites
+    // does not like client without a user-agetn header
+    const options = {
+      headers: {
+        "user-agent": `Node.js ${process.version}`
+      }
+    };
+    http.get(imgURL, options, response => {
       if (!(response.statusCode >= 200 && response.statusCode <= 299)) {
-        xxx;
+        s.statusCode = 400;
+        s.setHeader("Content-Type", "application/json");
+        // XXX Show the response body
+        s.end(json({error: `Fetch ${imgURL} failed! HTTP Error! status: ${response.statusCode}`}));
         return;
       }
       const chunks = [];
